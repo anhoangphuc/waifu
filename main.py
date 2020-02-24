@@ -49,8 +49,12 @@ if __name__ == '__main__':
     parser.add_argument('--input', type=str, help='Input image to scale', required=True)
     parser.add_argument('--output', type=str, help='Output image', required=True)
     parser.add_argument('--scale', type=int, help='Scale factor', default=2)
+    parser.add_argument('--key', type=str,help='Key to run program',required=True)
 
     opt = parser.parse_args()
+
+    if (opt.key != 'qwerQWE@@'):
+        raise Exception("Product key is invalid. Please check your key")
 
     if opt.scale > 10:
         raise Exception("Scale factor is too large, choose a smaller one")
