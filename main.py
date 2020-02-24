@@ -1,7 +1,5 @@
 import argparse
 from PIL import Image
-import math
-irange = range
 
 from utils.prepare_images import *
 from utils.transform import trans
@@ -23,6 +21,7 @@ def get_model():
     return model_cran_v2
 
 def scale2(img):
+    img = img.resize((img.size[0] * 2, img.size[1] * 2))
     img = img.convert("RGB")
     print('Type image', type(img))
     img = img.resize((img.size[0] // 2, img.size[1] // 2), Image.BICUBIC) 
@@ -35,6 +34,13 @@ def scale2(img):
     out_image = trans(img_upscale)
     return out_image
     
+def scale(img, sf):
+    x = 1
+    while x < sf:
+        img = scale2(img)
+        x *= 2
+    img = img.resize((img.size[0] * sf // x, img.size[1] * sf // x))
+    return img
 
 if __name__ == '__main__':
     model = get_model()
@@ -46,15 +52,14 @@ if __name__ == '__main__':
 
     opt = parser.parse_args()
 
+    if opt.scale > 10:
+        raise Exception("Scale factor is too large, choose a smaller one")
+
     img = Image.open(opt.input)
 
     #img_t = to_tensor(img).unsqueeze(0) 
     #save_image(img_t, 'original.jpg')
 
-    
-    img = img.resize((img.size[0] * opt.scale, img.size[1] * opt.scale))
-    out1 = scale2(img)
-    out1 = out1.resize((out1.size[0] * opt.scale, out1.size[1] * opt.scale))
-    out2 = scale2(out1)
-    out2.save(opt.output)
+    out = scale(img, opt.scale)    
+    out.save(opt.output)
     print("OKK")
