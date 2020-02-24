@@ -8,6 +8,7 @@ from torchvision.transforms.functional import to_tensor
 
 from Models import *
 
+import numpy as np
 
 class ImageSplitter:
     # key points:
@@ -118,3 +119,9 @@ def standardize_img_format(img_folder):
     pool.map(process, list_imgs)
     pool.close()
     pool.join()
+
+def convert_to_png(img):
+    img_num = np.asarray(img.convert("RGBA"))
+    nn = img_num.copy()
+    nn[nn[:, :, 0:3].sum(axis=2) <= 10] = [0, 0, 0, 0]
+    return Image.fromarray(nn)

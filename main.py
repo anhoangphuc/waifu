@@ -35,8 +35,10 @@ def scale2(img):
     return out_image
     
 def scale(img, sf):
+    print(sf)
     x = 1
     while x < sf:
+        print(x)
         img = scale2(img)
         x *= 2
     img = img.resize((img.size[0] * sf // x, img.size[1] * sf // x))
@@ -49,21 +51,20 @@ if __name__ == '__main__':
     parser.add_argument('--input', type=str, help='Input image to scale', required=True)
     parser.add_argument('--output', type=str, help='Output image', required=True)
     parser.add_argument('--scale', type=int, help='Scale factor', default=2)
-    parser.add_argument('--key', type=str,help='Key to run program',required=True)
+    parser.add_argument('--key', type=str,help='Key to run program',required=False)
 
     opt = parser.parse_args()
 
-    if (opt.key != 'qwerQWE@@'):
-        raise Exception("Product key is invalid. Please check your key")
+    #if (opt.key != 'qwerQWE@@'):
+    #    raise Exception("Product key is invalid. Please check your key")
 
-    if opt.scale > 10:
+    if opt.scale > 16:
         raise Exception("Scale factor is too large, choose a smaller one")
 
     img = Image.open(opt.input)
 
-    #img_t = to_tensor(img).unsqueeze(0) 
-    #save_image(img_t, 'original.jpg')
 
     out = scale(img, opt.scale)    
+    out = convert_to_png(out)
     out.save(opt.output)
     print("OKK")
