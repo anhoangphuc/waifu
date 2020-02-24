@@ -1,10 +1,13 @@
 import argparse
 from PIL import Image
+import math
+irange = range
 
 from utils.prepare_images import *
+from utils.transform import trans
 from Models import *
 
-from torchvision.utils import save_image
+import torch
 
 
 def get_model():
@@ -14,21 +17,23 @@ def get_model():
                         scale=2, activation=nn.LeakyReLU(0.1),
                         SEBlock=True, repeat_blocks=3, atrous=(1, 1, 1))
     model_cran_v2 = network_to_half(model_cran_v2)
-    print('device', device)
     model_cran_v2.load_state_dict(torch.load(checkpoint, device))
     model_cran_v2 = model_cran_v2.float()
 
     return model_cran_v2
 
 def scale2(img):
+    img = img.convert("RGB")
+    print('Type image', type(img))
     img = img.resize((img.size[0] // 2, img.size[1] // 2), Image.BICUBIC) 
     img_splitter = ImageSplitter(seg_size=64, scale_factor=2, boarder_pad_size=3)
     img_patches = img_splitter.split_img_tensor(img, scale_method=None, img_pad=0)
     with torch.no_grad():
         out = [model(i) for i in img_patches]
     img_upscale = img_splitter.merge_img_tensor(out)
-    print('Upscale type: ', type(img_upscale))
-    return img_upscale
+    print('Upscale type: ', img_upscale.shape)
+    out_image = trans(img_upscale)
+    return out_image
     
 
 if __name__ == '__main__':
@@ -41,27 +46,15 @@ if __name__ == '__main__':
 
     opt = parser.parse_args()
 
-    demo_img = opt.input
-    img = Image.open(demo_img)
-    img = img.resize((img.size[0] * opt.scale, img.size[1] * opt.scale))
-    img = img.convert("RGB")
+    img = Image.open(opt.input)
 
-    img_t = to_tensor(img).unsqueeze(0) 
-    save_image(img_t, 'original.jpg')
+    #img_t = to_tensor(img).unsqueeze(0) 
+    #save_image(img_t, 'original.jpg')
 
-    #img = img.resize((img.size[0] // 2, img.size[1] // 2), Image.BICUBIC) 
-
-    #img_splitter = ImageSplitter(seg_size=64, scale_factor=2, boarder_pad_size=3)
-    #img_patches = img_splitter.split_img_tensor(img, scale_method=None, img_pad=0)
-    #with torch.no_grad():
-    #    out = [model(i) for i in img_patches]
-    #img_upscale = img_splitter.merge_img_tensor(out)
     
+    img = img.resize((img.size[0] * opt.scale, img.size[1] * opt.scale))
     out1 = scale2(img)
-    save_image(out1, opt.output)
-    #out2 = scale2(out1)
-    #save_image(out2, opt.output)
-    #final = torch.cat([img_t, img_upscale])
-    #save_image(final, f'compare{opt.output}', nrow=2)
-
+    out1 = out1.resize((out1.size[0] * opt.scale, out1.size[1] * opt.scale))
+    out2 = scale2(out1)
+    out2.save(opt.output)
     print("OKK")
