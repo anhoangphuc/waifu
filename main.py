@@ -23,22 +23,20 @@ def get_model():
 def scale2(img):
     img = img.resize((img.size[0] * 2, img.size[1] * 2))
     img = img.convert("RGB")
-    print('Type image', type(img))
     img = img.resize((img.size[0] // 2, img.size[1] // 2), Image.BICUBIC) 
     img_splitter = ImageSplitter(seg_size=64, scale_factor=2, boarder_pad_size=3)
     img_patches = img_splitter.split_img_tensor(img, scale_method=None, img_pad=0)
     with torch.no_grad():
         out = [model(i) for i in img_patches]
     img_upscale = img_splitter.merge_img_tensor(out)
-    print('Upscale type: ', img_upscale.shape)
+    #print('Upscale type: ', img_upscale.shape)
     out_image = trans(img_upscale)
     return out_image
     
 def scale(img, sf):
-    print(sf)
     x = 1
     while x < sf:
-        print(x)
+        #print(x)
         img = scale2(img)
         x *= 2
     img = img.resize((img.size[0] * sf // x, img.size[1] * sf // x))
@@ -51,12 +49,14 @@ if __name__ == '__main__':
     parser.add_argument('--input', type=str, help='Input image to scale', required=True)
     parser.add_argument('--output', type=str, help='Output image', required=True)
     parser.add_argument('--scale', type=int, help='Scale factor', default=2)
-    parser.add_argument('--key', type=str,help='Key to run program',required=False)
+    parser.add_argument('--key', type=str,help='Key to run program',required=True)
 
     opt = parser.parse_args()
 
-    #if (opt.key != 'qwerQWE@@'):
-    #    raise Exception("Product key is invalid. Please check your key")
+    if not opt.key:
+        raise Exception("Your must provide product key to run program")
+    elif opt.key != 'qwerQWE@@':
+        raise Exception("Product key is invalid. Please check your key")
 
     if opt.scale > 16:
         raise Exception("Scale factor is too large, choose a smaller one")
